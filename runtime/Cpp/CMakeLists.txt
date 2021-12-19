@@ -19,10 +19,6 @@ if(NOT WITH_DEMO)
     FORCE)
 endif(NOT WITH_DEMO)
 
-option(WITH_LIBCXX "Building with clang++ and libc++(in Linux). To enable with: -DWITH_LIBCXX=On" Off)
-option(WITH_STATIC_CRT "(Visual C++) Enable to statically link CRT, which avoids requiring users to install the redistribution package.
- To disable with: -DWITH_STATIC_CRT=Off" On)
-
 project(LIBANTLR4)
 
 if(CMAKE_VERSION VERSION_EQUAL "3.0.0" OR
@@ -64,78 +60,6 @@ if(WITH_DEMO)
     endif()
   endif()
 endif(WITH_DEMO)
-
-if(MSVC_VERSION)
-  set(MY_CXX_WARNING_FLAGS "  /W4")
-else()
-  set(MY_CXX_WARNING_FLAGS "  -Wall -pedantic -W")
-endif()
-
-# Define USE_UTF8_INSTEAD_OF_CODECVT macro.
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_UTF8_INSTEAD_OF_CODECVT")
-
-# Initialize CXXFLAGS.
-if("${CMAKE_VERSION}" VERSION_GREATER 3.1.0)
-  if(NOT DEFINED CMAKE_CXX_STANDARD)
-    # only set CMAKE_CXX_STANDARD if not already set
-    # this allows the standard to be set by the caller, for example with -DCMAKE_CXX_STANDARD:STRING=17
-    set(CMAKE_CXX_STANDARD 11)
-  endif()
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF)
-else()
-  set(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} -std=c++11")
-  set(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11")
-  set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS_MINSIZEREL} -std=c++11")
-  set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} -std=c++11")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -std=c++11")
-endif()
-
-set(CMAKE_CXX_FLAGS                  "${CMAKE_CXX_FLAGS} ${MY_CXX_WARNING_FLAGS}")
-if(MSVC_VERSION)
-  set(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /MP ${MY_CXX_WARNING_FLAGS}")
-  set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS_MINSIZEREL} /O1 /Oi /Ob2 /Gy /MP /DNDEBUG ${MY_CXX_WARNING_FLAGS}")
-  set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} /O2 /Oi /Ob2 /Gy /MP /DNDEBUG ${MY_CXX_WARNING_FLGAS}")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /O2 /Oi /Ob2 /Gy /MP /Zi ${MY_CXX_WARNING_FLAGS}")
-else()
-  set(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g ${MY_CXX_WARNING_FLAGS}")
-  set(CMAKE_CXX_FLAGS_MINSIZEREL     "${CMAKE_CXX_FLAGS_MINSIZEREL} -Os -DNDEBUG ${MY_CXX_WARNING_FLAGS}")
-  set(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG ${MY_CXX_WARNING_FLGAS}")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -g ${MY_CXX_WARNING_FLAGS}")
-endif()
-
-# Compiler-specific C++11 activation.
-if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
-    execute_process(
-        COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-    # Just g++-5.0 and greater contain <codecvt> header. (test in ubuntu)
-    if(NOT (GCC_VERSION VERSION_GREATER 5.0 OR GCC_VERSION VERSION_EQUAL 5.0))
-        message(FATAL_ERROR "${PROJECT_NAME} requires g++ 5.0 or greater.")
-    endif ()
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND ANDROID) 
-	# Need -Os cflag and cxxflags here to work with exception handling on armeabi.
-	# see  https://github.com/android-ndk/ndk/issues/573
-	# and without -stdlib=libc++ cxxflags
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND ( CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "FreeBSD") )
-    execute_process(
-        COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE CLANG_VERSION)
-    if(NOT (CLANG_VERSION VERSION_GREATER 4.2.1 OR CLANG_VERSION VERSION_EQUAL 4.2.1))
-        message(FATAL_ERROR "${PROJECT_NAME} requires clang 4.2.1 or greater.")
-    endif()
-    # You can use libc++ to compile this project when g++ is NOT greater than or equal to 5.0.
-    if(WITH_LIBCXX)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    endif()
-elseif(MSVC_VERSION GREATER 1800 OR MSVC_VERSION EQUAL 1800)
-  # Visual Studio 2012+ supports c++11 features 
-elseif(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
-else()
-    message(FATAL_ERROR "Your C++ compiler does not support C++11.")
-endif()
-
 
 add_subdirectory(runtime)
 if(WITH_DEMO)
