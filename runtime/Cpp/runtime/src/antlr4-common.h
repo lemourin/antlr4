@@ -99,7 +99,6 @@
 #else
   typedef std::u32string UTF32String;
 
-  #define GUID_LIBUUID
   #if __GNUC__ >= 6
     #define ANTLR4CPP_PUBLIC __attribute__ ((visibility ("default")))
   #else

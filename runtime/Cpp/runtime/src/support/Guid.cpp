@@ -26,10 +26,6 @@
 
 #include "Guid.h"
 
-#ifdef GUID_LIBUUID
-#include <uuid/uuid.h>
-#endif
-
 #ifdef GUID_CFUUID
 #include <CoreFoundation/CFUUID.h>
 #endif
@@ -150,17 +146,6 @@ std::string Guid::toString() const {
   os << *this;
   return os.str();
 }
-
-// This is the linux friendly implementation, but it could work on other
-// systems that have libuuid available
-#ifdef GUID_LIBUUID
-Guid GuidGenerator::newGuid()
-{
-  uuid_t id;
-  uuid_generate(id);
-  return id;
-}
-#endif
 
 // this is the mac and ios version
 #ifdef GUID_CFUUID
